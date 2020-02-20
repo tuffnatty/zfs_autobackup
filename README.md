@@ -1,3 +1,5 @@
+# This branch is finshed, please go to <https://github.com/psy0rz/zfs_autobackup>
+
 # ZFS autobackup
 
 ## New in v3
