@@ -360,7 +360,8 @@ class ZfsAutobackup(ZfsAuto):
                                               destroy_incompatible=self.args.destroy_incompatible,
                                               send_pipes=send_pipes, recv_pipes=recv_pipes,
                                               decrypt=self.args.decrypt, encrypt=self.args.encrypt,
-                                              zfs_compressed=self.args.zfs_compressed, force=self.args.force)
+                                              zfs_compressed=self.args.zfs_compressed, force=self.args.force,
+                                              make_target_name=lambda source_dataset: self.make_target_name(source_dataset))
             except Exception as e:
                 # if self.args.progress:
                 #     self.clear_progress()

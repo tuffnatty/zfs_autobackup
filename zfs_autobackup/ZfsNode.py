@@ -1,5 +1,6 @@
 # python 2 compatibility
 from __future__ import print_function
+from operator import attrgetter
 import re
 import shlex
 import subprocess
@@ -238,15 +239,15 @@ class ZfsNode(ExecuteNode):
     def selected_datasets(self, property_name, exclude_received, exclude_paths, exclude_unchanged):
         """determine filesystems that should be backed up by looking at the special autobackup-property, systemwide
 
-           returns: ( list of selected ZfsDataset, list of excluded ZfsDataset)
+           returns: (list of selected ZfsDataset sorted by creation time, list of excluded ZfsDataset)
         """
 
         self.debug("Getting selected datasets")
 
         # get all source filesystems that have the backup property
         lines = self.run(tab_split=True, readonly=True, cmd=[
-            "zfs", "get", "-t", "volume,filesystem", "-o", "name,value,source", "-H",
-            property_name
+            "zfs", "get", "-t", "volume,filesystem", "-Hp",
+            property_name + ",creation"
         ])
 
 
@@ -258,7 +259,13 @@ class ZfsNode(ExecuteNode):
         sources = {}
 
         for line in lines:
-            (name, value, raw_source) = line
+            (name, prop_name, value, raw_source) = line
+            if prop_name == "creation":
+                # creation date for the last dataset
+                if selected_filesystems and selected_filesystems[-1].name == name:
+                    selected_filesystems[-1].creation = int(value)
+            if prop_name != property_name:
+                continue
             dataset = self.get_dataset(name, force_exists=True)
 
             # "resolve" inherited sources
@@ -281,5 +288,5 @@ class ZfsNode(ExecuteNode):
                 excluded_filesystems.append(dataset)
             #returns None when no property is set.
 
-
-        return ( selected_filesystems, excluded_filesystems)
+        return (sorted(selected_filesystems, key=attrgetter("creation")),
+                excluded_filesystems)
