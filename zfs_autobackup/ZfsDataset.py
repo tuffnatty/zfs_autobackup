@@ -829,7 +829,8 @@ class ZfsDataset:
             # target has nothing yet
             origin = self.properties.get("origin")
             if origin:
-                # We are a clone. The origin has earlier creation time and thus must have been already synced.
+                # We are a clone. The origin has earlier createtxg, and thus
+                # must have been already synced.
                 return ZfsDataset(self.zfs_node, origin)
             return None
         else:

@@ -239,7 +239,7 @@ class ZfsNode(ExecuteNode):
     def selected_datasets(self, property_name, exclude_received, exclude_paths, exclude_unchanged):
         """determine filesystems that should be backed up by looking at the special autobackup-property, systemwide
 
-           returns: (list of selected ZfsDataset sorted by creation time, list of excluded ZfsDataset)
+           returns: (list of selected ZfsDataset sorted by createtxg, list of excluded ZfsDataset)
         """
 
         self.debug("Getting selected datasets")
@@ -247,7 +247,7 @@ class ZfsNode(ExecuteNode):
         # get all source filesystems that have the backup property
         lines = self.run(tab_split=True, readonly=True, cmd=[
             "zfs", "get", "-t", "volume,filesystem", "-Hp",
-            property_name + ",creation"
+            property_name + ",createtxg"
         ])
 
 
@@ -260,10 +260,10 @@ class ZfsNode(ExecuteNode):
 
         for line in lines:
             (name, prop_name, value, raw_source) = line
-            if prop_name == "creation":
-                # creation date for the last dataset
+            if prop_name == "createtxg":
+                # createtxg for the last dataset
                 if selected_filesystems and selected_filesystems[-1].name == name:
-                    selected_filesystems[-1].creation = int(value)
+                    selected_filesystems[-1].createtxg = int(value)
             if prop_name != property_name:
                 continue
             dataset = self.get_dataset(name, force_exists=True)
@@ -288,5 +288,5 @@ class ZfsNode(ExecuteNode):
                 excluded_filesystems.append(dataset)
             #returns None when no property is set.
 
-        return (sorted(selected_filesystems, key=attrgetter("creation")),
+        return (sorted(selected_filesystems, key=attrgetter("createtxg")),
                 excluded_filesystems)
